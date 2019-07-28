@@ -16,8 +16,8 @@ class ZModElt(RingElt):
         super().__init__(domain)
         self.value = int(value) % self.domain.n
 
-    def __eq__(self, other) -> bool:
-        return self.domain == other.domain and self.value == other.value
+    def _eq_(self, other: "ZModElt") -> bool:
+        return self.value == other.value
 
     def __hash__(self) -> int:
         data = (self.domain, self.value)
@@ -31,22 +31,22 @@ class ZModElt(RingElt):
         return str(self)
 
     # Arithmetic
-    def __add__(self, other):
+    def _add_(self, other: "ZModElt"):
         return self.domain(self.value + other.value)
 
-    def __neg__(self):
+    def _neg_(self: "ZModElt"):
         return self.domain(-self.value)
 
-    def __sub__(self, other):
+    def _sub_(self, other: "ZModElt"):
         return self.domain(self.value - other.value)
 
-    def __mul__(self, other):
+    def _mul_(self, other: "ZModElt"):
         return self.domain(self.value * other.value)
 
     def __truediv__(self, other):
         return self * other.inv()
 
-    def __pow__(self, exp: int):
+    def _pow_(self, exp: int):
         if exp >= 0:
             a = self.value
             b = exp

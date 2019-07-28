@@ -71,3 +71,24 @@ assert str(R.ONE) == "1"
 assert str(R([1, 2, -3])) == "1 + 2 x + 2 x^2"
 assert str(R([])) == "0"
 assert str(R([1])) == "1"
+
+# Testing coercion methods
+a = ZZ(3)
+assert a == 3
+
+assert a + 4 == 7
+assert a - 7 == -4
+assert a * 2 == 6
+assert 1 + a == 4
+assert 2 - a == -1
+assert 9 * a == 27
+
+b = Z23(7)
+assert b == 7
+assert b == 30
+assert a + b == 10
+assert a * b == -2
+
+c = Zx([1, 2, 3])
+assert c - 2 == Zx([-1, 2, 3])
+assert c * 3 == Zx([3, 6, 9])

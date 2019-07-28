@@ -26,8 +26,8 @@ class PolyRingElt(RingElt):
 
         super().__init__(domain)
 
-    def __eq__(self, other) -> bool:
-        return self.domain == other.domain and self.coeffs == other.coeffs
+    def _eq_(self, other: "PolyRingElt") -> bool:
+        return self.coeffs == other.coeffs
 
     def __hash__(self) -> int:
         data = (self.domain, self.coeffs)
@@ -62,24 +62,24 @@ class PolyRingElt(RingElt):
         return str(self)
 
     # Arithmetic
-    def __add__(self, other: "PolyRingElt") -> "PolyRingElt":
+    def _add_(self, other: "PolyRingElt") -> "PolyRingElt":
         coeffs = [
             a + b
             for a, b in zip_longest(self.coeffs, other.coeffs, fillvalue=self.ring.ZERO)
         ]
         return self.domain(coeffs)
 
-    def __neg__(self) -> "PolyRingElt":
+    def _neg_(self) -> "PolyRingElt":
         return self.domain([-a for a in self.coeffs])
 
-    def __sub__(self, other: "PolyRingElt") -> "PolyRingElt":
+    def _sub_(self, other: "PolyRingElt") -> "PolyRingElt":
         coeffs = [
             a - b
             for a, b in zip_longest(self.coeffs, other.coeffs, fillvalue=self.ring.ZERO)
         ]
         return self.domain(coeffs)
 
-    def __mul__(self, other: "PolyRingElt") -> "PolyRingElt":
+    def _mul_(self, other: "PolyRingElt") -> "PolyRingElt":
         if self.is_zero() or other.is_zero():
             return self.domain.ZERO
 

@@ -23,19 +23,20 @@ class IntegerElt(RingElt):
     def __int__(self) -> int:
         return self.value
 
-    def __add__(self, other: "IntegerElt") -> "IntegerElt":
+    # Arithmetic
+    def _add_(self, other: "IntegerElt") -> "IntegerElt":
         return self.domain(self.value + other.value)
 
-    def __neg__(self) -> "IntegerElt":
+    def _neg_(self) -> "IntegerElt":
         return self.domain(-self.value)
 
-    def __sub__(self, other: "IntegerElt") -> "IntegerElt":
+    def _sub_(self, other: "IntegerElt") -> "IntegerElt":
         return self.domain(self.value - other.value)
 
-    def __mul__(self, other: "IntegerElt") -> "IntegerElt":
+    def _mul_(self, other: "IntegerElt") -> "IntegerElt":
         return self.domain(self.value * other.value)
 
-    def __eq__(self, other) -> bool:
+    def _eq_(self, other) -> bool:
         return self.value == other.value
 
 

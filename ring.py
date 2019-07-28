@@ -1,14 +1,42 @@
 #!/usr/bin/env python3
 
 from abc import ABC, abstractmethod
-from typing import Dict, Type, Optional, Callable, TypeVar, Generic, Any, cast, Union
+from typing import (
+    Dict,
+    Type,
+    Optional,
+    Callable,
+    TypeVar,
+    Generic,
+    Any,
+    cast,
+    Union,
+    Tuple,
+)
+
+
+E = TypeVar("E", bound="RingElt")  # element type
+RingEltPlus = Union[int, "RingElt"]  # RingElt plus some special cases
 
 
 class CoercionError(Exception):
     pass
 
 
-E = TypeVar("E", bound="RingElt")  # element type
+def to_elt(x: RingEltPlus) -> "RingElt":
+    # If it's already an element, return it
+    if isinstance(x, RingElt):
+        return x
+
+    # Special case: we want to treat python integers as IntegerElts
+    if isinstance(x, int):
+        from integer import ZZ
+
+        return ZZ(x)
+
+    raise CoercionError(
+        f"{x} (type {x.__class__}) could not be interpreted as a RingElt"
+    )
 
 
 class Ring(ABC, Generic[E]):
@@ -26,21 +54,14 @@ class Ring(ABC, Generic[E]):
         # note that we pass ourselves in as the domain; this isn't a pass-thru!
         return self._elt_type(self, *args, **kwargs)  # type: ignore
 
-    def coerce(self, elt: Union[int, "RingElt"]) -> E:
+    def coerce(self, elt: RingEltPlus) -> E:
         """
         Attempts to coerce the given element into this ring. If no coercion
         is found, throws "CoercionError"
         """
 
-        # Special case: we want to treat python integers as IntegerElts
-        if isinstance(elt, int):
-            from integer import ZZ
-
-            elt = ZZ(elt)
-
-        # We can only coerce from RingElts (except the special case above)
-        if not isinstance(elt, RingElt):
-            raise CoercionError(f"{elt} is not a subclass of RingElt")
+        # Turn our special cases into actual elements
+        elt = to_elt(elt)
 
         # If it's our own type, just return it
         if elt.domain == self:
@@ -72,30 +93,85 @@ class Ring(ABC, Generic[E]):
 
 class RingElt(ABC):
 
-    # TODO implement coercion on operators!
-
     domain: Ring
 
     def __init__(self, domain: Ring):
         self.domain = domain
 
+    @staticmethod
+    def _coerce_pair(lhs: RingEltPlus, rhs: RingEltPlus) -> Tuple["RingElt", "RingElt"]:
+        lhs = to_elt(lhs)
+        rhs = to_elt(rhs)
+
+        try:
+            return lhs, lhs.domain.coerce(rhs)
+        except CoercionError:
+            pass
+
+        try:
+            return rhs.domain.coerce(lhs), rhs
+        except CoercionError:
+            pass
+
+        raise CoercionError(
+            f"Could not find a common parent for {lhs.domain} and {rhs.domain}"
+        )
+
+    # Magic methods; use coercion to apply single-underscore methods
+    def __add__(self, other: RingEltPlus) -> "RingElt":
+        lhs, rhs = RingElt._coerce_pair(self, other)
+        return lhs._add_(rhs)
+
+    def __radd__(self, other: RingEltPlus) -> "RingElt":
+        rhs, lhs = RingElt._coerce_pair(self, other)
+        return lhs._add_(rhs)
+
+    def __neg__(self) -> "RingElt":
+        return self._neg_()
+
+    def __sub__(self, other: RingEltPlus) -> "RingElt":
+        lhs, rhs = RingElt._coerce_pair(self, other)
+        return lhs._sub_(rhs)
+
+    def __rsub__(self, other: RingEltPlus) -> "RingElt":
+        rhs, lhs = RingElt._coerce_pair(self, other)
+        return lhs._sub_(rhs)
+
+    def __mul__(self, other: RingEltPlus) -> "RingElt":
+        lhs, rhs = RingElt._coerce_pair(self, other)
+        return lhs._mul_(rhs)
+
+    def __rmul__(self, other: RingEltPlus) -> "RingElt":
+        rhs, lhs = RingElt._coerce_pair(self, other)
+        return lhs._mul_(rhs)
+
+    def __pow__(self, exp: int) -> "RingElt":
+        return self._pow_(exp)
+
+    def __eq__(self, other: RingEltPlus) -> bool: # type: ignore
+        # TODO can i do a isinstance on type aliases? then i can make this
+        # signature "object" and drop the type ignore
+        lhs, rhs = RingElt._coerce_pair(self, other)
+        return lhs._eq_(rhs)
+
+    # Required things to implement to be a ring
     @abstractmethod
-    def __add__(self: E, other: E) -> E:
+    def _add_(self: E, other: E) -> E:
         ...
 
     @abstractmethod
-    def __neg__(self: E) -> E:
+    def _neg_(self: E) -> E:
         ...
 
     @abstractmethod
-    def __sub__(self: E, other: E) -> E:
+    def _sub_(self: E, other: E) -> E:
         ...
 
     @abstractmethod
-    def __mul__(self: E, other: E) -> E:
+    def _mul_(self: E, other: E) -> E:
         ...
 
-    def __pow__(self: E, exp: int) -> E:
+    def _pow_(self: E, exp: int) -> E:
         """
         Generic powering method. Override if your class can do it more efficiently.
         """
@@ -106,15 +182,15 @@ class RingElt(ABC):
         if exp == 1:
             return self
 
-        result = self ** (exp // 2)
-        result *= result
+        result = self._pow_(exp // 2)
+        result = result._mul_(result)
         if exp % 2 == 1:
-            result *= self
+            result = result._mul_(self)
 
         return result
 
     @abstractmethod
-    def __eq__(self, other) -> bool:
+    def _eq_(self, other) -> bool:
         ...
 
     def is_zero(self) -> bool:
