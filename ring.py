@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 from abc import ABC, abstractmethod
+from enum import Enum
 from typing import (
     Dict,
     Type,
@@ -21,6 +22,12 @@ RingEltPlus = Union[int, "RingElt"]  # RingElt plus some special cases
 
 class CoercionError(Exception):
     pass
+
+
+class RingProperties(Enum):
+    FINITE = 1
+    FIELD = 2
+    ORDERED = 3
 
 
 def to_elt(x: RingEltPlus) -> "RingElt":
@@ -46,9 +53,11 @@ class Ring(ABC, Generic[E]):
 
     _elt_type: Type[E]  # TODO maybe change into _element_constructor?
     _coerce_maps: Dict["Ring", Callable[[Any], E]]
+    _props: Dict[RingProperties, bool]
 
     def __init__(self, *args, **kwargs):
         self._coerce_maps = {}
+        self._props = {}
 
     def __call__(self, *args, **kwargs) -> E:
         # note that we pass ourselves in as the domain; this isn't a pass-thru!
@@ -148,7 +157,7 @@ class RingElt(ABC):
     def __pow__(self, exp: int) -> "RingElt":
         return self._pow_(exp)
 
-    def __eq__(self, other: RingEltPlus) -> bool: # type: ignore
+    def __eq__(self, other: RingEltPlus) -> bool:  # type: ignore
         # TODO can i do a isinstance on type aliases? then i can make this
         # signature "object" and drop the type ignore
         lhs, rhs = RingElt._coerce_pair(self, other)

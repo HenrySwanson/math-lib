@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 
 from math import gcd
-from ring import Ring, RingElt
+from ring import Ring, RingElt, RingProperties
 from typing import Iterator
 
 from integer import ZZ, IntegerElt, IntType
+from util import is_prime
 
 
 class ZModElt(RingElt):
@@ -91,7 +92,11 @@ class ZMod(Ring):
         super().__init__()
 
         self.n = int(n)
-        assert self.n >= 1
+        assert n >= 1
+
+        self._props[RingProperties.FINITE] = True
+        self._props[RingProperties.FIELD] = is_prime(n)
+        self._props[RingProperties.ORDERED] = False
 
         # Register coercions. Only one we've got is from ZZ.
         def ZZ_coercion(x: IntegerElt) -> ZModElt:

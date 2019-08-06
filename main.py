@@ -3,6 +3,7 @@
 from integer import ZZ
 from zmod import ZMod
 from poly import PolyRing
+from ring import RingProperties
 
 
 def hom_tests(ring):
@@ -92,3 +93,25 @@ assert a * b == -2
 c = Zx([1, 2, 3])
 assert c - 2 == Zx([-1, 2, 3])
 assert c * 3 == Zx([3, 6, 9])
+
+# Testing properties
+assert not ZZ._props[RingProperties.FINITE]
+assert not ZZ._props[RingProperties.FIELD]
+assert ZZ._props[RingProperties.ORDERED]
+
+assert Z23._props[RingProperties.FINITE]
+assert Z23._props[RingProperties.FIELD]
+assert not Z23._props[RingProperties.ORDERED]
+
+assert Z22._props[RingProperties.FINITE]
+assert not Z22._props[RingProperties.FIELD]
+assert not Z22._props[RingProperties.ORDERED]
+
+assert not Zx._props[RingProperties.FINITE]
+assert not Zx._props[RingProperties.FIELD]
+assert Zx._props[RingProperties.ORDERED]
+
+# recall R is Z5[x]
+assert not R._props[RingProperties.FINITE]
+assert not R._props[RingProperties.FIELD]
+assert not R._props[RingProperties.ORDERED]

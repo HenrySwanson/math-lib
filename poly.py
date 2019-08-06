@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 from itertools import zip_longest
-from ring import Ring, RingElt
+from ring import Ring, RingElt, RingProperties
 import collections
 from typing import TypeVar, Sequence, List, Union
 
@@ -111,6 +111,11 @@ class PolyRing(Ring):
         assert len(var) == 1
         self.ring = ring
         self.var = var
+
+        self._props[RingProperties.FINITE] = False
+        self._props[RingProperties.FIELD] = False
+        # order is lexicographic by degree
+        self._props[RingProperties.ORDERED] = ring._props[RingProperties.ORDERED]
 
         # Register coercions. We have just the one from R.
         def ring_conversion(r: RingElt) -> PolyRingElt:

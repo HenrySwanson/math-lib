@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-from ring import Ring, RingElt
+from ring import Ring, RingElt, RingProperties
 from typing import Union
 
 # TODO maybe just virtual subclass this so this isn't so snowflakey
@@ -44,6 +44,12 @@ class _IntegerSingleton(Ring):
     # this is a singleton immutable class, i.e., we have no state
 
     _elt_type = IntegerElt
+
+    def __init__(self) -> None:
+        super().__init__()
+        self._props[RingProperties.FINITE] = False
+        self._props[RingProperties.FIELD] = False
+        self._props[RingProperties.ORDERED] = True
 
     def __eq__(self, other) -> bool:
         return isinstance(other, _IntegerSingleton)
